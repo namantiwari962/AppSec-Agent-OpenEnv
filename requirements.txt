@@ -1,0 +1,20 @@
+# Core OpenEnv + RL Stack
+openenv-core
+trl>=0.8.0
+unsloth
+peft
+
+# Model + Training
+torch
+datasets
+wandb
+transformers
+accelerate
+bitsandbytes
+
+# Environment & Verification
+pytest
+pydantic
+
+# Gradio Demo (Hugging Face Spaces)
+gradio>=4.0.0
