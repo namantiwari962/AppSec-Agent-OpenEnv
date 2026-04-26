@@ -1,3 +1,16 @@
+---
+title: AppSec Agent OpenEnv
+emoji: 🛡️
+colorFrom: red
+colorTo: blue
+sdk: gradio
+sdk_version: 4.26.0
+app_file: app.py
+pinned: false
+license: mit
+short_description: Red Team vs Blue Team RL Environment for Application Security
+---
+
 # AppSec RL Agent — OpenEnv Hackathon
 
 > **Red Team vs. Blue Team** · Autonomous Application Security via GRPO Reinforcement Learning
@@ -6,7 +19,7 @@
 [![Framework](https://img.shields.io/badge/RL-GRPO%20%2B%20TRL-orange)](https://github.com/huggingface/trl)
 [![Model](https://img.shields.io/badge/Model-LLaMA--3--8B%20Instruct-purple)](https://huggingface.co/unsloth/llama-3-8b-Instruct-bnb-4bit)
 [![Environment](https://img.shields.io/badge/Env-OpenEnv%20Compatible-green)](https://github.com/pytorch-labs/openenv)
-[![Demo](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Live%20Demo-yellow)](#) <!-- TODO: Replace # with your HF Space URL -->
+[![Demo](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Live%20Demo-yellow)](https://huggingface.co/spaces/NamanTiwari/AppSec-Agent-OpenEnv)
 
 ---
 
