@@ -71,12 +71,13 @@ def create_reward_plot(history):
     if not history:
         ax.plot([], [], color='#00f3ff')
         ax.set_xlim(0, 10)
-        ax.set_ylim(-110, 60)
+        ax.set_ylim(-110, 110)
     else:
-        x = list(range(1, len(history) + 1))
-        ax.plot(x, history, color='#00f3ff', marker='o', markersize=8, markerfacecolor='#bc13fe', markeredgecolor='#00f3ff', linewidth=2)
+        x = [item['attempt'] for item in history]
+        y = [item['reward'] for item in history]
+        ax.plot(x, y, color='#00f3ff', marker='o', markersize=8, markerfacecolor='#bc13fe', markeredgecolor='#00f3ff', linewidth=2)
         ax.set_xlim(0.5, max(10, len(history) + 0.5))
-        ax.set_ylim(-110, 60)
+        ax.set_ylim(-110, 110)
         
     ax.set_title("Reward Progression per Attempt", color='#00f3ff', fontsize=12, pad=15)
     ax.set_xlabel("Evaluation Attempt", color='#94a3b8')
@@ -94,51 +95,73 @@ def create_reward_plot(history):
     plt.tight_layout()
     return fig
 
+def generate_trace_log(history):
+    if not history:
+        return "No attempts made yet."
+    lines = []
+    for item in history:
+        lines.append(f"Attempt {item['attempt']}: {item['reward']:+g} {item['info']}")
+    return "\n".join(lines)
+
 def evaluate_patch(patch_code: str, history: list):
     """
     Run the agent's patch through the AppSecEnvironment and return
     formatted results for Gradio display.
     """
-    if not patch_code.strip():
+    try:
+        if not patch_code.strip():
+            fig = create_reward_plot(history)
+            return (
+                "⚠️ Please enter a Python patch to evaluate.",
+                "—", "—", "—", "—", "—",
+                history, fig, generate_trace_log(history)
+            )
+
+        env.reset()
+        action = AppSecAction(patch_code=patch_code)
+        obs, reward, done, info = env.step(action)
+        
+        attempt_num = len(history) + 1
+        
+        # ── Reward Badge & Trace Info ────────────────────────────────
+        if reward == 50.0:
+            reward_badge = "🟢 +50 — OPTIMAL DEFENSE! All vulnerabilities patched."
+            trace_info = "(Success)"
+        elif reward == -10.0:
+            reward_badge = "🟡 -10 — Partial / failed attempt."
+            trace_info = "(Partial)"
+        else:
+            reward_badge = "🔴 -100 — Episode failed. Server compromised or anti-cheat violation."
+            if obs.stderr and "Anti-Cheat" in obs.stderr:
+                trace_info = "(Anti-Cheat)"
+            else:
+                trace_info = "(Compromised)"
+
+        history.append({"attempt": attempt_num, "reward": reward, "info": trace_info})
+
+        # ── Vulnerability Status ──────────────────────────────────────
+        vulns = info.get("vulnerabilities", {})
+        sqli = "✅ Fixed" if vulns.get("sqli_fixed") else "❌ Vulnerable"
+        xss  = "✅ Fixed" if vulns.get("xss_fixed")  else "❌ Vulnerable"
+        lfi  = "✅ Fixed" if vulns.get("lfi_fixed")   else "❌ Vulnerable"
+
+        # ── Test Output ───────────────────────────────────────────────
+        test_output = obs.stdout or "(no pytest output)"
+        if obs.stderr:
+            test_output += f"\n\nSTDERR:\n{obs.stderr}"
+
+        fig = create_reward_plot(history)
+        trace_log = generate_trace_log(history)
+        return reward_badge, sqli, xss, lfi, test_output, obs.file_content, history, fig, trace_log
+
+    except Exception as e:
         fig = create_reward_plot(history)
         return (
-            "⚠️ Please enter a Python patch to evaluate.",
-            "—",
-            "—",
-            "—",
-            "—",
-            "—",
-            history,
-            fig
+            f"🔴 CRASH: {str(e)}",
+            "❌ Error", "❌ Error", "❌ Error",
+            f"Traceback:\n{str(e)}",
+            "—", history, fig, generate_trace_log(history)
         )
-
-    env.reset()
-    action = AppSecAction(patch_code=patch_code)
-    obs, reward, done, info = env.step(action)
-    
-    history.append(reward)
-
-    # ── Reward Badge ──────────────────────────────────────────────
-    if reward == 50.0:
-        reward_badge = "🟢 +50 — OPTIMAL DEFENSE! All vulnerabilities patched."
-    elif reward == -10.0:
-        reward_badge = "🟡 -10 — Partial / failed attempt."
-    else:
-        reward_badge = "🔴 -100 — Episode failed. Server compromised or anti-cheat violation."
-
-    # ── Vulnerability Status ──────────────────────────────────────
-    vulns = info.get("vulnerabilities", {})
-    sqli = "✅ Fixed" if vulns.get("sqli_fixed") else "❌ Vulnerable"
-    xss  = "✅ Fixed" if vulns.get("xss_fixed")  else "❌ Vulnerable"
-    lfi  = "✅ Fixed" if vulns.get("lfi_fixed")   else "❌ Vulnerable"
-
-    # ── Test Output ───────────────────────────────────────────────
-    test_output = obs.stdout or "(no pytest output)"
-    if obs.stderr:
-        test_output += f"\n\nSTDERR:\n{obs.stderr}"
-
-    fig = create_reward_plot(history)
-    return reward_badge, sqli, xss, lfi, test_output, obs.file_content, history, fig
 
 
 def load_vulnerable_code():
@@ -242,25 +265,31 @@ with gr.Blocks(
                         interactive=False,
                         lines=10,
                     )
+                    trace_out = gr.Textbox(
+                        label="📜 Trace Log",
+                        interactive=False,
+                        lines=5,
+                        elem_classes=["glass-panel"]
+                    )
 
             eval_btn.click(
                 fn=evaluate_patch,
                 inputs=[patch_input, reward_state],
-                outputs=[reward_out, sqli_out, xss_out, lfi_out, test_output, applied_code, reward_state, reward_plot],
+                outputs=[reward_out, sqli_out, xss_out, lfi_out, test_output, applied_code, reward_state, reward_plot, trace_out],
             )
             
             # Reset history if they load a new code manually to start a new sequence
             def reset_and_load_vuln():
-                return load_vulnerable_code(), [], create_reward_plot([])
+                return load_vulnerable_code(), [], create_reward_plot([]), generate_trace_log([])
                 
             def reset_and_load_ref():
-                return load_reference_patch(), [], create_reward_plot([])
+                return load_reference_patch(), [], create_reward_plot([]), generate_trace_log([])
 
-            load_vuln.click(fn=reset_and_load_vuln, outputs=[patch_input, reward_state, reward_plot])
-            load_ref.click(fn=reset_and_load_ref,  outputs=[patch_input, reward_state, reward_plot])
+            load_vuln.click(fn=reset_and_load_vuln, outputs=[patch_input, reward_state, reward_plot, trace_out])
+            load_ref.click(fn=reset_and_load_ref,  outputs=[patch_input, reward_state, reward_plot, trace_out])
             
             # Initial plot render
-            demo.load(fn=lambda: create_reward_plot([]), outputs=[reward_plot])
+            demo.load(fn=lambda: (create_reward_plot([]), generate_trace_log([])), outputs=[reward_plot, trace_out])
 
         # ─── Tab 2: Vulnerability Explorer ───────────────────────
         with gr.TabItem("🔍 Vulnerability Explorer"):
