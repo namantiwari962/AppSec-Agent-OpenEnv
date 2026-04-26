@@ -22,6 +22,10 @@ short_description: Red Team vs Blue Team RL Environment for AppSec
 [![Environment](https://img.shields.io/badge/Env-OpenEnv%20Compatible-green)](https://github.com/pytorch-labs/openenv)
 [![Demo](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Live%20Demo-yellow)](https://huggingface.co/spaces/NamanTiwari/AppSec-Agent-OpenEnv)
 
+### 📌 Quick Links for Judges
+- **Hugging Face Space (Live Demo)**: [https://huggingface.co/spaces/NamanTiwari/AppSec-Agent-OpenEnv](https://huggingface.co/spaces/NamanTiwari/AppSec-Agent-OpenEnv)
+- **Evaluation Writeup / Blog**: Please read our primary evaluation document here: [**Blog.md**](Blog.md)
+
 ---
 
 ## 🎯 Project Overview
@@ -161,26 +165,31 @@ We successfully trained our AppSec Agent using GRPO. Below are the training curv
 ## 📁 Project Structure
 
 ```
-AppSec_Agent_Round2/
-│
-├── server/                          # OpenEnv environment package
+AppSec_RL_Agent/
+├── server/                         # OpenEnv environment package
 │   ├── __init__.py
-│   ├── environment.py               # AppSecEnvironment (core RL env)
-│   └── models.py                    # Pydantic Action/Observation models
+│   ├── environment.py              # AppSecEnvironment (Core RL logic & Anti-Cheat)
+│   └── models.py                   # Pydantic Action/Observation models
 │
-├── target_app/                      # Target application (agent's workspace)
+├── target_app/                     # Agent's workspace (Vulnerable App)
+│   ├── public/                     # Folder for LFI/Path Traversal testing
+│   │   └── test.txt
 │   ├── __init__.py
-│   ├── vulnerable_app.py            # The vulnerable app (reset each episode)
-│   ├── test_app.py                  # Pytest verifier suite (Red Team tests)
-│   └── security_audit.log           # Written at episode end
+│   ├── secret.txt                  # Sensitive file for security testing
+│   ├── security_audit.log          # Runtime logs for agent actions
+│   ├── test_app.py                 # Pytest suite (The "Red Team" validator)
+│   └── vulnerable_app.py           # The target script being patched
 │
-├── train_grpo.py                    # GRPO training script (main entry point)
-├── app.py                           # Gradio demo for Hugging Face Spaces
-├── ui.css                           # Premium Cyberpunk UI styles (Glassmorphism)
-├── ui.js                            # Custom JS for animations and UI polish
-├── test_env.py                      # Smoke test for environment validation
-├── requirements.txt                 # Python dependencies
-└── README.md                        # This file
+├── app.py                          # Main Gradio UI (Cyberpunk Demo)
+├── Blog.md                         # Technical Whitepaper & Deep Dive
+├── README.md                       # Landing page & Documentation
+├── requirements.txt                # Python dependencies (matplotlib, gradio, etc.)
+├── ui.css                          # Custom Glassmorphism & Neon styles
+├── ui.js                           # Custom UI animations & logic
+├── test_env.py                     # Smoke test for environment verification
+├── train_grpo.py                   # Main RL training script (GRPO logic)
+├── wandb_loss.png                  # Training analytics (Loss Curve)
+└── wandb_reward.png                # Training analytics (Reward Curve)
 ```
 
 ---
@@ -253,6 +262,20 @@ os.chdir('/content/AppSec_Agent_Round2')
 ```
 
 **Recommended Colab Runtime**: GPU → T4 (free) or A100 (Colab Pro)
+
+---
+
+## 📈 Evidence of Training (Weights & Biases)
+
+We successfully trained our agent using the `train_grpo.py` script. The GRPO relative advantage optimization allowed the LLaMA-3-8B model to converge efficiently.
+
+Below are the actual plots from our run demonstrating the RL progression:
+
+**Reward Progression (Increasing +50 signals)**:
+![WandB Reward Plot](wandb_reward.png)
+
+**Loss Curve (Stabilising Advantage)**:
+![WandB Loss Plot](wandb_loss.png)
 
 ---
 

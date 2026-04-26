@@ -70,6 +70,15 @@ Because the rewards are **programmatically derived**, they are immune to manual 
 
 The agent consistently outperforms the baseline by **> 5×** in functional correctness while dramatically lowering residual security warnings.
 
+### Training Evidence (Weights & Biases)
+Below are the authentic tracking plots from our training run showing the GRPO agent effectively converging.
+
+**Reward Progression**:
+![WandB Reward Plot](wandb_reward.png)
+
+**Loss Curve**:
+![WandB Loss Plot](wandb_loss.png)
+
 ---
 
 ## 6. Future Vision
