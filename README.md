@@ -42,6 +42,12 @@ The agent must fix **all three OWASP vulnerabilities** in a single patched file,
 
 ## 🏗️ Architecture
 
+### 🔄 Evaluation Workflow
+
+![Evaluation Workflow Diagram](https://quickchart.io/mermaid?chart=graph%20TD%3B%20A%5BAgent%20Patch%5D%3A%3A%3Ab%20--%3E%20B%7BAnti-Cheat%7D%3A%3A%3Ab%3B%20B--Fail--%3EC%5BPenalty%20-100%5D%3A%3A%3Ar%3B%20B--Pass--%3ED%7BPytest%7D%3A%3A%3Ab%3B%20D--Fail--%3EE%5BReward%20-10%5D%3A%3A%3Ar%3B%20D--Pass--%3EF%5BReward%20%2B50%5D%3A%3A%3Ag%3B%20C--%3EG%5BUI%20Update%5D%3A%3A%3Ab%3B%20E--%3EG%3B%20F--%3EG%3B%20classDef%20b%20fill%3A%233b82f6%2Ccolor%3A%23fff%3B%20classDef%20r%20fill%3A%23ef4444%2Ccolor%3A%23fff%3B%20classDef%20g%20fill%3A%2310b981%2Ccolor%3A%23fff%3B)
+
+### 🧩 Core Components
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      train_grpo.py                              │
