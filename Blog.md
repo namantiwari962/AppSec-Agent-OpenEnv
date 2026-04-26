@@ -100,6 +100,7 @@ This premium UI ensures the profound backend complexity (GRPO + Anti-Cheat) is m
 
 ---
 
-*Prepared by:* **Somnath – Lead Technical Writer, Meta OpenEnv Hackathon**
+
+*Prepared by:* **Naman Tiwari – Team Leader (Team CodeXminer)**
 
 *Date:* 2026‑04‑26
