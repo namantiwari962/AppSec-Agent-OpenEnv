@@ -176,6 +176,8 @@ AppSec_Agent_Round2/
 │
 ├── train_grpo.py                    # GRPO training script (main entry point)
 ├── app.py                           # Gradio demo for Hugging Face Spaces
+├── ui.css                           # Premium Cyberpunk UI styles (Glassmorphism)
+├── ui.js                            # Custom JS for animations and UI polish
 ├── test_env.py                      # Smoke test for environment validation
 ├── requirements.txt                 # Python dependencies
 └── README.md                        # This file
@@ -259,9 +261,10 @@ os.chdir('/content/AppSec_Agent_Round2')
 The `app.py` provides a Gradio interface deployable to HF Spaces.
 
 **Features:**
-- 🛡️ **Patch Evaluator**: Write or paste a patch, run the full environment, see pytest results + reward
-- 🔍 **Vulnerability Explorer**: Side-by-side before/after for all 3 vulnerability types
-- 📊 **Reward System**: Architecture overview, reward table, anti-cheat documentation
+- 🛡️ **Patch Evaluator**: Write or paste a patch, run the full environment, see pytest results + reward.
+- 🔍 **Vulnerability Explorer**: Side-by-side before/after for all 3 vulnerability types.
+- 📊 **Reward System**: Architecture overview, reward table, anti-cheat documentation.
+- 🎨 **Premium Cyberpunk UI**: Fully custom `ui.css` and `ui.js` providing a glassmorphism aesthetic, glowing animations, and custom typography to "wow" the judges.
 
 **Deploy:**
 1. Create a new HF Space (Gradio SDK)
