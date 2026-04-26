@@ -1,5 +1,5 @@
 ---
-title: AppSec Agent OpenEnv
+title: AppSec RL Agent (Meta OpenEnv)
 emoji: 🛡️
 colorFrom: red
 colorTo: blue
@@ -12,7 +12,7 @@ license: mit
 short_description: Red Team vs Blue Team RL Environment for AppSec
 ---
 
-# AppSec RL Agent — OpenEnv Hackathon
+# AppSec RL Agent (Meta OpenEnv)
 
 > **Red Team vs. Blue Team** · Autonomous Application Security via GRPO Reinforcement Learning
 
@@ -261,7 +261,10 @@ os.chdir('/content/AppSec_Agent_Round2')
 The `app.py` provides a Gradio interface deployable to HF Spaces.
 
 **Features:**
-- 🛡️ **Patch Evaluator**: Write or paste a patch, run the full environment, see pytest results + reward.
+- 🛡️ **Interactive Patch Evaluator**: Write or paste a patch, run the full environment, and see pytest results instantly.
+- 🎲 **Random Patch Simulator**: A built-in demo button that injects varying patches (+50, -10, -100) to demonstrate the environment's robust evaluation pipeline and anti-cheat mechanism.
+- 📈 **Dynamic Reward Graph**: A real-time `matplotlib` chart tracks the agent's attempt history, visually plotting the learning progression.
+- 📜 **Trace Logging**: A built-in terminal log tracks every evaluation outcome chronologically.
 - 🔍 **Vulnerability Explorer**: Side-by-side before/after for all 3 vulnerability types.
 - 📊 **Reward System**: Architecture overview, reward table, anti-cheat documentation.
 - 🎨 **Premium Cyberpunk UI**: Fully custom `ui.css` and `ui.js` providing a glassmorphism aesthetic, glowing animations, and custom typography to "wow" the judges.

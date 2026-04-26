@@ -270,7 +270,7 @@ with gr.Blocks(
         gr.Markdown(
             """
             <div class="cyber-header">
-                <h1 class="glitch" data-text="🔐 AppSec RL Agent">🔐 AppSec RL Agent</h1>
+                <h1 class="glitch" data-text="AppSec RL Agent (Meta OpenEnv)">AppSec RL Agent (Meta OpenEnv)</h1>
                 <h3 class="subtitle">Red Team vs. Blue Team · Powered by GRPO + Unsloth + LLaMA-3-8B</h3>
                 <p class="desc">An autonomous RL-trained Blue Team agent actively patches vulnerable Python microservices to stop Red Team exploits in real-time.</p>
             </div>
@@ -437,11 +437,19 @@ with gr.Blocks(
                 | Anti-Cheat violation | **-100** | ✅ Yes |
 
                 ### 🛡️ Anti-Cheat System (2-Layer)
+                We implemented a robust two-layer security validation system:
 
                 | Layer | Method | Detects |
                 |-------|--------|---------|
                 | Static | AST analysis | `import os/sys/subprocess`, `__import__()`, `eval()`, `exec()`, `exit()` |
-                | Dynamic | File mtime snapshot | Physical modification of `test_app.py` or `server/` files |
+                | Dynamic | File mtime snapshot | Physical modification of `test_app.py` or `server/` files. **(Note: Specifically tracks `.py` files to ignore `pytest` generated `__pycache__` directories)** |
+
+                ### 🎲 The Random Patch Evaluator
+                To demonstrate our environment's evaluation capability, the **🎲 Random Patch** button cycles through 4 distinct outcomes:
+                1. **Optimal Patch (+50)**: A perfect fix utilizing `html.escape` and parameterized queries.
+                2. **Partial Patch (-10)**: Fixes XSS but fails the LFI and SQLi validation tests.
+                3. **Vulnerable Patch (-100)**: The original unpatched code, failing all checks.
+                4. **Anti-Cheat Trigger (-100)**: Simulates a rogue agent attempting to import `subprocess` to hijack the environment.
 
                 ### 🤖 RL Training Stack
                 - **Model**: LLaMA-3-8B-Instruct (4-bit quantized via Unsloth)

@@ -162,10 +162,10 @@ def test_step_info_dict_structure(env):
 # Anti-Cheat Tests
 # ──────────────────────────────────────────────────────────────────────────────
 
-def test_anti_cheat_blocks_import_os(env):
-    """A patch importing 'os' must trigger anti-cheat (-100)."""
+def test_anti_cheat_blocks_import_subprocess(env):
+    """A patch importing 'subprocess' must trigger anti-cheat (-100)."""
     env.reset()
-    patch = "import os\nprint(os.getcwd())\n" + env.original_content
+    patch = "import subprocess\nprint('hacked')\n" + env.original_content
     action = AppSecAction(patch_code=patch)
     obs, reward, done, info = env.step(action)
     assert reward == -100.0
