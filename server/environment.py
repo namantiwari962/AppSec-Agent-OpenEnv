@@ -49,7 +49,7 @@ class AppSecEnvironment(Environment):
     # Dangerous builtins / names the patch must not call
     FORBIDDEN_NAMES = frozenset({
         'exit', 'quit', '__import__', 'exec', 'eval',
-        'open', 'compile', 'globals', 'locals', 'vars',
+        'compile', 'globals', 'locals', 'vars',
         '__builtins__',
     })
 
@@ -303,9 +303,10 @@ def read_file(filename):
         server_files = []
         if os.path.exists(self.server_dir):
             for fname in os.listdir(self.server_dir):
-                fpath = os.path.join(self.server_dir, fname)
-                if os.path.isfile(fpath):
-                    server_files.append((fname, os.path.getmtime(fpath)))
+                if fname.endswith(".py"):
+                    fpath = os.path.join(self.server_dir, fname)
+                    if os.path.isfile(fpath):
+                        server_files.append((fname, os.path.getmtime(fpath)))
         mtimes['server_files'] = server_files
         return mtimes
 

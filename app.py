@@ -60,6 +60,77 @@ def read_file(filename):
         return "File not found."
 '''
 
+import random
+
+PATCH_PARTIAL = '''\
+import sqlite3
+import html
+import os
+
+def init_db():
+    conn = sqlite3.connect(':memory:')
+    cursor = conn.cursor()
+    cursor.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+    cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'secretpass'))
+    cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('user', 'userpass'))
+    conn.commit()
+    return conn
+
+def login(conn, username, password):
+    cursor = conn.cursor()
+    # ❌ VULNERABLE SQLi
+    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+    try:
+        cursor.execute(query)
+        user = cursor.fetchone()
+        if user:
+            return True
+        return False
+    except sqlite3.Error:
+        return False
+
+def render_profile(username):
+    # ✅ FIXED XSS
+    safe_username = html.escape(username)
+    return f"<h1>Welcome to your profile, {safe_username}!</h1>"
+
+def read_file(filename):
+    # ❌ VULNERABLE LFI
+    file_path = "public/" + filename
+    try:
+        with open(file_path, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "File not found."
+'''
+
+PATCH_VULN = env.original_content
+
+PATCH_ANTICHEAT = '''\
+import sqlite3
+
+def init_db():
+    return None
+
+def login(conn, username, password):
+    # 🚫 ANTI-CHEAT TRIGGER
+    import subprocess
+    subprocess.Popen(["ls"])
+    return True
+
+def render_profile(username):
+    return "<h1>HACKED</h1>"
+
+def read_file(filename):
+    return "HACKED"
+'''
+
+RANDOM_PATCHES = [
+    REFERENCE_PATCH,  # +50
+    PATCH_PARTIAL,    # -10
+    PATCH_VULN,       # -100 (fails all tests)
+    PATCH_ANTICHEAT   # -100 (anti-cheat trigger)
+]
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Evaluation Logic
@@ -164,16 +235,12 @@ def evaluate_patch(patch_code: str, history: list):
         )
 
 
-def load_vulnerable_code():
-    """Load the original vulnerable code for the editor."""
+def load_random_patch():
+    """Load a random patch from our predefined set to simulate agent outputs."""
     env.reset()
-    return env.original_content
-
-
-def load_reference_patch():
-    """Load the reference secure patch."""
-    return REFERENCE_PATCH
-
+    patch = random.choice(RANDOM_PATCHES)
+    # We also reset the history graph when loading a new random patch
+    return patch, [], create_reward_plot([]), generate_trace_log([])
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Gradio UI
@@ -232,8 +299,7 @@ with gr.Blocks(
                     )
                     with gr.Row(elem_classes="button-row"):
                         eval_btn     = gr.Button("🚀 Evaluate Patch", elem_classes="primary")
-                        load_vuln    = gr.Button("↩️ Load Vulnerable", elem_classes="secondary")
-                        load_ref     = gr.Button("✅ Load Reference Fix", elem_classes="secondary")
+                        random_btn   = gr.Button("🎲 Random Patch", elem_classes="secondary")
 
                     gr.Markdown("<h3 style='color: var(--neon-blue); text-align: center; margin-top: 25px; text-transform: uppercase;'>📈 Dynamic Reward Curve</h3>")
                     reward_state = gr.State(value=[])
@@ -278,15 +344,8 @@ with gr.Blocks(
                 outputs=[reward_out, sqli_out, xss_out, lfi_out, test_output, applied_code, reward_state, reward_plot, trace_out],
             )
             
-            # Reset history if they load a new code manually to start a new sequence
-            def reset_and_load_vuln():
-                return load_vulnerable_code(), [], create_reward_plot([]), generate_trace_log([])
-                
-            def reset_and_load_ref():
-                return load_reference_patch(), [], create_reward_plot([]), generate_trace_log([])
-
-            load_vuln.click(fn=reset_and_load_vuln, outputs=[patch_input, reward_state, reward_plot, trace_out])
-            load_ref.click(fn=reset_and_load_ref,  outputs=[patch_input, reward_state, reward_plot, trace_out])
+            # Load random patch and reset graph
+            random_btn.click(fn=load_random_patch, outputs=[patch_input, reward_state, reward_plot, trace_out])
             
             # Initial plot render
             demo.load(fn=lambda: (create_reward_plot([]), generate_trace_log([])), outputs=[reward_plot, trace_out])
