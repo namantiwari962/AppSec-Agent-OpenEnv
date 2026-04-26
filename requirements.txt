@@ -18,3 +18,4 @@ pydantic
 
 # Gradio Demo (Hugging Face Spaces)
 gradio>=4.0.0
+matplotlib

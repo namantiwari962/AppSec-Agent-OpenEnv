@@ -1,6 +1,9 @@
 import gradio as gr
 import sys
 import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -61,12 +64,43 @@ def read_file(filename):
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Evaluation Logic
 # ──────────────────────────────────────────────────────────────────────────────
-def evaluate_patch(patch_code: str):
+def create_reward_plot(history):
+    fig, ax = plt.subplots(figsize=(8, 4), facecolor='#05050A')
+    ax.set_facecolor('#05050A')
+    
+    if not history:
+        ax.plot([], [], color='#00f3ff')
+        ax.set_xlim(0, 10)
+        ax.set_ylim(-110, 60)
+    else:
+        x = list(range(1, len(history) + 1))
+        ax.plot(x, history, color='#00f3ff', marker='o', markersize=8, markerfacecolor='#bc13fe', markeredgecolor='#00f3ff', linewidth=2)
+        ax.set_xlim(0.5, max(10, len(history) + 0.5))
+        ax.set_ylim(-110, 60)
+        
+    ax.set_title("Reward Progression per Attempt", color='#00f3ff', fontsize=12, pad=15)
+    ax.set_xlabel("Evaluation Attempt", color='#94a3b8')
+    ax.set_ylabel("Reward Signal", color='#94a3b8')
+    
+    # Grid and spines with RGBA tuples
+    ax.grid(color=(1, 1, 1, 0.1), linestyle='--', linewidth=0.5)
+    ax.spines['bottom'].set_color((1, 1, 1, 0.2))
+    ax.spines['left'].set_color((1, 1, 1, 0.2))
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    ax.tick_params(colors='#94a3b8')
+    
+    plt.tight_layout()
+    return fig
+
+def evaluate_patch(patch_code: str, history: list):
     """
     Run the agent's patch through the AppSecEnvironment and return
     formatted results for Gradio display.
     """
     if not patch_code.strip():
+        fig = create_reward_plot(history)
         return (
             "⚠️ Please enter a Python patch to evaluate.",
             "—",
@@ -74,11 +108,15 @@ def evaluate_patch(patch_code: str):
             "—",
             "—",
             "—",
+            history,
+            fig
         )
 
     env.reset()
     action = AppSecAction(patch_code=patch_code)
     obs, reward, done, info = env.step(action)
+    
+    history.append(reward)
 
     # ── Reward Badge ──────────────────────────────────────────────
     if reward == 50.0:
@@ -99,7 +137,8 @@ def evaluate_patch(patch_code: str):
     if obs.stderr:
         test_output += f"\n\nSTDERR:\n{obs.stderr}"
 
-    return reward_badge, sqli, xss, lfi, test_output, obs.file_content
+    fig = create_reward_plot(history)
+    return reward_badge, sqli, xss, lfi, test_output, obs.file_content, history, fig
 
 
 def load_vulnerable_code():
@@ -173,14 +212,12 @@ with gr.Blocks(
                         load_vuln    = gr.Button("↩️ Load Vulnerable", elem_classes="secondary")
                         load_ref     = gr.Button("✅ Load Reference Fix", elem_classes="secondary")
 
-                    gr.Markdown("<h3 style='color: var(--neon-blue); text-align: center; margin-top: 25px; text-transform: uppercase;'>📈 Training Reward Curve (GRPO)</h3>")
-                    gr.Image(
-                        value="wandb_reward.png", 
-                        label="RL Reward Signal during Training", 
-                        show_label=False, 
-                        interactive=False, 
-                        elem_classes="glass-panel",
-                        container=False
+                    gr.Markdown("<h3 style='color: var(--neon-blue); text-align: center; margin-top: 25px; text-transform: uppercase;'>📈 Dynamic Reward Curve</h3>")
+                    reward_state = gr.State(value=[])
+                    reward_plot = gr.Plot(
+                        label="Live Reward Signal",
+                        show_label=False,
+                        elem_classes="glass-panel"
                     )
 
                 with gr.Column(scale=1):
@@ -208,11 +245,22 @@ with gr.Blocks(
 
             eval_btn.click(
                 fn=evaluate_patch,
-                inputs=[patch_input],
-                outputs=[reward_out, sqli_out, xss_out, lfi_out, test_output, applied_code],
+                inputs=[patch_input, reward_state],
+                outputs=[reward_out, sqli_out, xss_out, lfi_out, test_output, applied_code, reward_state, reward_plot],
             )
-            load_vuln.click(fn=load_vulnerable_code, outputs=[patch_input])
-            load_ref.click(fn=load_reference_patch,  outputs=[patch_input])
+            
+            # Reset history if they load a new code manually to start a new sequence
+            def reset_and_load_vuln():
+                return load_vulnerable_code(), [], create_reward_plot([])
+                
+            def reset_and_load_ref():
+                return load_reference_patch(), [], create_reward_plot([])
+
+            load_vuln.click(fn=reset_and_load_vuln, outputs=[patch_input, reward_state, reward_plot])
+            load_ref.click(fn=reset_and_load_ref,  outputs=[patch_input, reward_state, reward_plot])
+            
+            # Initial plot render
+            demo.load(fn=lambda: create_reward_plot([]), outputs=[reward_plot])
 
         # ─── Tab 2: Vulnerability Explorer ───────────────────────
         with gr.TabItem("🔍 Vulnerability Explorer"):
