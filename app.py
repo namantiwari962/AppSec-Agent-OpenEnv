@@ -168,10 +168,20 @@ with gr.Blocks(
                         lines=28,
                         elem_id="patch_input",
                     )
-                    with gr.Row():
+                    with gr.Row(elem_classes="button-row"):
                         eval_btn     = gr.Button("🚀 Evaluate Patch", elem_classes="primary")
                         load_vuln    = gr.Button("↩️ Load Vulnerable", elem_classes="secondary")
                         load_ref     = gr.Button("✅ Load Reference Fix", elem_classes="secondary")
+
+                    gr.Markdown("<h3 style='color: var(--neon-blue); text-align: center; margin-top: 25px; text-transform: uppercase;'>📈 Training Reward Curve (GRPO)</h3>")
+                    gr.Image(
+                        value="wandb_reward.png", 
+                        label="RL Reward Signal during Training", 
+                        show_label=False, 
+                        interactive=False, 
+                        elem_classes="glass-panel",
+                        container=False
+                    )
 
                 with gr.Column(scale=1):
                     reward_out = gr.Textbox(
