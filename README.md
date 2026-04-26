@@ -194,8 +194,10 @@ AppSec_RL_Agent/
 ├── ui.js                           # Custom UI animations & logic
 ├── test_env.py                     # Smoke test for environment verification
 ├── train_grpo.py                   # Main RL training script (GRPO logic)
+├── flowchart.png                   # 📊 Architecture Logic Flow Diagram
 ├── wandb_loss.png                  # Training analytics (Loss Curve)
-└── wandb_reward.png                # Training analytics (Reward Curve)
+├── wandb_reward.png                # Training analytics (Reward Curve)
+└── .gitattributes                  # Git LFS configuration for binary files
 ```
 
 ---
