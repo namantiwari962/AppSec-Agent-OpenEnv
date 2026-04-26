@@ -191,17 +191,22 @@ def read_file(filename):
             return obs, -100.0, True, self._build_info(error="Anti-Cheat Violation")
 
         # ── 4. Run pytest verifiers ──────────────────────────────────
-        func_result = subprocess.run(
-            ["pytest", "test_app.py", "-k", "functional", "--tb=short", "-v"],
-            capture_output=True, text=True, cwd=self.target_dir
-        )
-        regression_pass = func_result.returncode == 0
+        try:
+            func_result = subprocess.run(
+                ["pytest", "test_app.py", "-k", "functional", "--tb=short", "-v"],
+                capture_output=True, text=True, cwd=self.target_dir, timeout=10
+            )
+            regression_pass = func_result.returncode == 0
 
-        sec_result = subprocess.run(
-            ["pytest", "test_app.py", "-k", "security", "--tb=short", "-v"],
-            capture_output=True, text=True, cwd=self.target_dir
-        )
-        exploit_fails = sec_result.returncode == 0
+            sec_result = subprocess.run(
+                ["pytest", "test_app.py", "-k", "security", "--tb=short", "-v"],
+                capture_output=True, text=True, cwd=self.target_dir, timeout=10
+            )
+            exploit_fails = sec_result.returncode == 0
+        except subprocess.TimeoutExpired:
+            logger.error("Pytest execution timed out (infinite loop detected in patch).")
+            self.reset()
+            return self._get_observation(stderr="Timeout Error: The patch contains an infinite loop or heavy blocking operation."), -100.0, True, self._build_info(error="TimeoutExpired")
 
         # Per-vulnerability breakdown (parse pytest -v output)
         sqli_fixed = "test_security_sqli PASSED" in sec_result.stdout
