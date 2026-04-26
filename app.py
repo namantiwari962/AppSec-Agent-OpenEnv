@@ -125,12 +125,8 @@ def read_file(filename):
     return "HACKED"
 '''
 
-RANDOM_PATCHES = [
-    REFERENCE_PATCH,  # +50
-    PATCH_PARTIAL,    # -10
-    PATCH_VULN,       # -100 (fails all tests)
-    PATCH_ANTICHEAT   # -100 (anti-cheat trigger)
-]
+# Global deck to ensure diverse, non-repeating random selection
+RANDOM_PATCHES_DECK = []
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Evaluation Logic
@@ -237,8 +233,21 @@ def evaluate_patch(patch_code: str, history: list):
 
 def load_random_patch():
     """Load a random patch from our predefined set to simulate agent outputs."""
+    global RANDOM_PATCHES_DECK
     env.reset()
-    patch = random.choice(RANDOM_PATCHES)
+    
+    # Shuffled Queue / Deck logic to prevent immediate repetition
+    if not RANDOM_PATCHES_DECK:
+        RANDOM_PATCHES_DECK = [
+            REFERENCE_PATCH, REFERENCE_PATCH, REFERENCE_PATCH,  # Re-balanced for more +50s
+            PATCH_PARTIAL,
+            PATCH_VULN,
+            PATCH_ANTICHEAT
+        ]
+        random.shuffle(RANDOM_PATCHES_DECK)
+        
+    patch = RANDOM_PATCHES_DECK.pop()
+    
     # We also reset the history graph when loading a new random patch
     return patch, [], create_reward_plot([]), generate_trace_log([])
 
