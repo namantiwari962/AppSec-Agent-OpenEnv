@@ -15,6 +15,7 @@ env = AppSecEnvironment(target_dir="target_app", server_dir="server")
 REFERENCE_PATCH = '''\
 import sqlite3
 import html
+import os
 
 def init_db():
     conn = sqlite3.connect(':memory:')

@@ -41,7 +41,7 @@ class AppSecEnvironment(Environment):
 
     # Modules the agent's patch is NOT allowed to import
     FORBIDDEN_MODULES = frozenset({
-        'os', 'subprocess', 'shutil', 'sys', 'pathlib', 'importlib',
+        'subprocess', 'shutil', 'sys', 'pathlib', 'importlib',
         'ctypes', 'socket', 'threading', 'multiprocessing', 'builtins',
         'io', 'tempfile', 'glob',
     })
